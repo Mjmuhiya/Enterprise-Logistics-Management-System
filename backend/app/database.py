@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DATABASE_URL = "postgresql+psycopg://logiflow:logiflow_dev_only@db:5432/logiflow"
+from app.config import settings
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(settings.database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
