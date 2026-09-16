@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -24,6 +26,7 @@ class ShipmentCreate(BaseModel):
     destination: str = Field(min_length=2, max_length=1000)
     weight_kg: float = Field(gt=0)
     tracking_number: str | None = Field(default=None, min_length=3, max_length=50)
+    customer_id: UUID | None = None
 
 
 class ShipmentStatusUpdate(BaseModel):
