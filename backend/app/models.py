@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -124,7 +124,7 @@ class Route(Base):
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     driver_id: Mapped[UUID | None] = mapped_column(ForeignKey("drivers.id"))
     vehicle_id: Mapped[UUID | None] = mapped_column(ForeignKey("vehicles.id"))
-    route_date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    route_date: Mapped[date] = mapped_column(Date, nullable=False)
     total_distance_km: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     estimated_duration_minutes: Mapped[int | None] = mapped_column(Integer)
     optimisation_method: Mapped[str | None] = mapped_column(String(100))
