@@ -14,6 +14,7 @@ from app.services import authenticate_user, create_shipment, register_user
 from app.fleet import router as fleet_router
 from app.inventory import router as inventory_router
 from app.routing import router as routing_router
+from app.warehouses import router as warehouse_router
 
 app = FastAPI(
     title="LogiFlow Enterprise API",
@@ -134,4 +135,5 @@ def update_status(shipment_id: UUID, payload: ShipmentStatusUpdate, user: User =
 
 app.include_router(fleet_router)
 app.include_router(inventory_router)
+app.include_router(warehouse_router)
 app.include_router(routing_router)
