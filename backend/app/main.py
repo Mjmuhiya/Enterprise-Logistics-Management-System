@@ -2,19 +2,22 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies import current_user, require_role
 from app.models import Shipment, User
 from app.repositories import add_status_history, get_customer_by_user_id, get_shipment, list_shipments
 from app.schemas import ShipmentCreate, ShipmentStatusUpdate, TokenResponse, UserCreate, UserLogin
-from app.security import create_access_token, decode_access_token
+from app.security import create_access_token
 from app.services import authenticate_user, create_shipment, register_user
+from app.fleet import router as fleet_router
+from app.inventory import router as inventory_router
+from app.routing import router as routing_router
 
 app = FastAPI(
     title="LogiFlow Enterprise API",
-    version="1.3.0",
+    version="1.4.0",
     description="REST API for intelligent logistics and supply chain management.",
 )
 app.add_middleware(
@@ -24,7 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 STATUS_FLOW = {
     "CREATED": {"PICKUP_SCHEDULED", "CANCELLED"},
@@ -61,36 +63,13 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)) -> TokenRespons
     return TokenResponse(access_token=create_access_token(str(user.id), user.role.name))
 
 
-def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    payload = decode_access_token(token)
-    if not payload or not payload.get("sub"):
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    try:
-        user_id = UUID(payload["sub"])
-    except ValueError as exc:
-        raise HTTPException(status_code=401, detail="Invalid token subject") from exc
-    user = db.get(User, user_id)
-    if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
-
-
-def require_role(*roles: str):
-    allowed = {role.upper() for role in roles}
-
-    def dependency(user: User = Depends(current_user)) -> User:
-        if user.role.name.upper() not in allowed:
-            raise HTTPException(status_code=403, detail="Insufficient permissions")
-        return user
-
-    return dependency
-
-
 def shipment_response(shipment: Shipment) -> dict:
     return {
         "id": str(shipment.id),
         "tracking_number": shipment.tracking_number,
         "customer_id": str(shipment.customer_id),
+        "driver_id": str(shipment.driver_id) if shipment.driver_id else None,
+        "vehicle_id": str(shipment.vehicle_id) if shipment.vehicle_id else None,
         "origin": shipment.origin_address,
         "destination": shipment.destination_address,
         "weight_kg": float(shipment.weight_kg),
@@ -152,11 +131,6 @@ def update_status(shipment_id: UUID, payload: ShipmentStatusUpdate, user: User =
     db.refresh(shipment)
     return shipment_response(shipment)
 
-
-# Feature routers are imported after the core dependencies to keep the API modules reusable.
-from app.fleet import router as fleet_router
-from app.inventory import router as inventory_router
-from app.routing import router as routing_router
 
 app.include_router(fleet_router)
 app.include_router(inventory_router)
