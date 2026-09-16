@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -16,6 +16,13 @@ app = FastAPI(
     title="LogiFlow Enterprise API",
     version="1.2.0",
     description="REST API for intelligent logistics and supply chain management.",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -95,7 +102,7 @@ def shipment_response(shipment: Shipment) -> dict:
 
 @app.post("/api/v1/shipments", status_code=status.HTTP_201_CREATED, tags=["Shipments"])
 def create_shipment_endpoint(payload: ShipmentCreate, user: User = Depends(require_role("CUSTOMER", "ADMIN")), db: Session = Depends(get_db)) -> dict:
-    customer_id = payload.customer_id if hasattr(payload, "customer_id") and payload.customer_id else None
+    customer_id = payload.customer_id
     if user.role.name.upper() == "CUSTOMER":
         customer = get_customer_by_user_id(db, user.id)
         if not customer:
