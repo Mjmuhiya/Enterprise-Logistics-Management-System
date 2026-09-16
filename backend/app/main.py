@@ -14,7 +14,7 @@ from app.services import authenticate_user, create_shipment, register_user
 
 app = FastAPI(
     title="LogiFlow Enterprise API",
-    version="1.2.0",
+    version="1.3.0",
     description="REST API for intelligent logistics and supply chain management.",
 )
 app.add_middleware(
@@ -151,3 +151,13 @@ def update_status(shipment_id: UUID, payload: ShipmentStatusUpdate, user: User =
     db.commit()
     db.refresh(shipment)
     return shipment_response(shipment)
+
+
+# Feature routers are imported after the core dependencies to keep the API modules reusable.
+from app.fleet import router as fleet_router
+from app.inventory import router as inventory_router
+from app.routing import router as routing_router
+
+app.include_router(fleet_router)
+app.include_router(inventory_router)
+app.include_router(routing_router)
