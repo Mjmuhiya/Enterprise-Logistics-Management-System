@@ -46,8 +46,6 @@ class Shipment(Base):
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     tracking_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     customer_id: Mapped[UUID] = mapped_column(ForeignKey("customers.id"), nullable=False, index=True)
-    driver_id: Mapped[UUID | None] = mapped_column(ForeignKey("drivers.id"))
-    vehicle_id: Mapped[UUID | None] = mapped_column(ForeignKey("vehicles.id"))
     origin_address: Mapped[str] = mapped_column(Text, nullable=False)
     destination_address: Mapped[str] = mapped_column(Text, nullable=False)
     weight_kg: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
