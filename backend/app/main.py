@@ -11,14 +11,17 @@ from app.repositories import add_status_history, get_customer_by_user_id, get_sh
 from app.schemas import ShipmentCreate, ShipmentStatusUpdate, TokenResponse, UserCreate, UserLogin
 from app.security import create_access_token
 from app.services import authenticate_user, create_shipment, register_user
+from app.analytics import router as analytics_router
+from app.billing import router as billing_router
 from app.fleet import router as fleet_router
 from app.inventory import router as inventory_router
+from app.notifications import router as notifications_router
 from app.routing import router as routing_router
 from app.warehouses import router as warehouse_router
 
 app = FastAPI(
     title="LogiFlow Enterprise API",
-    version="1.4.0",
+    version="1.5.0",
     description="REST API for intelligent logistics and supply chain management.",
 )
 app.add_middleware(
@@ -133,7 +136,10 @@ def update_status(shipment_id: UUID, payload: ShipmentStatusUpdate, user: User =
     return shipment_response(shipment)
 
 
+app.include_router(analytics_router)
+app.include_router(billing_router)
 app.include_router(fleet_router)
 app.include_router(inventory_router)
+app.include_router(notifications_router)
 app.include_router(warehouse_router)
 app.include_router(routing_router)
